@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Positions Map</title>
+    
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        #map { height: 500px; width: 90%; margin: auto; }
+        table { width: 90%; margin: 20px auto; border-collapse: collapse; }
+        th, td { padding: 8px; border: 1px solid black; text-align: center; }
+        th { background-color: #f4f4f4; }
+        #filterContainer { margin: 20px; }
+    </style>
+</head>
+<body>
+    <h2>Live Vehicle Positions</h2>
+
+    <!-- Route Filter Dropdown -->
+    <div id="filterContainer">
+        <label for="routeFilter"><b>Filter by Route:</b></label>
+        <select id="routeFilter">
+            <option value="all">All Routes</option>
+        </select>
+    </div>
+
+    <!-- Leaflet Map -->
+    <div id="map"></div>
+
+    <h3>Vehicle Positions Table</h3>
+    <!-- Table to display vehicle data -->
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Label</th>
+                <th>Route</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+                <th>Speed (m/s)</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody id="vehicleTable">
+        </tbody>
+    </table>
+
+    <script>
+        let map = L.map('map').setView([30.2672, -97.7431], 12); // Center on Austin, TX
+
+        // Add a tile layer (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        let markers = []; // Store map markers for filtering
+        let allVehicles = []; // Store all vehicle data
+        let routeFilter = document.getElementById('routeFilter');
+
+        // Fetch vehicle positions from JSON file
+        fetch('vehiclepositions.json')
+            .then(response => response.json())
+            .then(data => {
+                let tableBody = document.getElementById('vehicleTable');
+                let routes = new Set();
+
+                allVehicles = data.entity.map(v => {
+                    let lat = v.vehicle.position.latitude;
+                    let lon = v.vehicle.position.longitude;
+                    let label = v.vehicle.vehicle.label;
+                    let speed = v.vehicle.position.speed || 0;
+                    let timestamp = new Date(v.vehicle.timestamp * 1000).toLocaleString();
+                    let route = v.vehicle.trip ? v.vehicle.trip.routeId : 'N/A';
+
+                    routes.add(route);
+
+                    return { lat, lon, label, speed, timestamp, route, id: v.vehicle.vehicle.id };
+                });
+
+                // Populate the route filter dropdown
+                routes.forEach(route => {
+                    let option = document.createElement('option');
+                    option.value = route;
+                    option.textContent = `Route ${route}`;
+                    routeFilter.appendChild(option);
+                });
+
+                // Display vehicles initially
+                updateMapAndTable();
+            })
+            .catch(error => console.error('Error loading JSON:', error));
+
+        // Function to update map and table based on the selected route
+        function updateMapAndTable() {
+            let selectedRoute = routeFilter.value;
+            let tableBody = document.getElementById('vehicleTable');
+
+            // Clear existing markers and table rows
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+            tableBody.innerHTML = '';
+
+            allVehicles.forEach(v => {
+                if (selectedRoute === "all" || v.route === selectedRoute) {
+                    // Add marker to the map
+                    let marker = L.marker([v.lat, v.lon]).addTo(map)
+                        .bindPopup(`<b>Vehicle: ${v.label}</b><br>Route: ${v.route}<br>Speed: ${v.speed.toFixed(2)} m/s`);
+                    markers.push(marker);
+
+                    // Add row to the table
+                    let row = `<tr>
+                        <td>${v.id}</td>
+                        <td>${v.label}</td>
+                        <td>${v.route}</td>
+                        <td>${v.lat}</td>
+                        <td>${v.lon}</td>
+                        <td>${v.speed.toFixed(2)}</td>
+                        <td>${v.timestamp}</td>
+                    </tr>`;
+                    tableBody.innerHTML += row;
+                }
+            });
+        }
+
+        // Event listener for dropdown change
+        routeFilter.addEventListener('change', updateMapAndTable);
+    </script>
+</body>
+</html>
