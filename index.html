@@ -1,23 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vehicle Positions Map</title>
-    
+
     <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        #map { height: 500px; width: 90%; margin: auto; }
-        table { width: 90%; margin: 20px auto; border-collapse: collapse; }
-        th, td { padding: 8px; border: 1px solid black; text-align: center; }
-        th { background-color: #f4f4f4; }
-        #filterContainer { margin: 20px; }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        #map {
+            height: 500px;
+            width: 90%;
+            margin: auto;
+        }
+
+        table {
+            width: 90%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            border: 1px solid black;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        #filterContainer {
+            margin: 20px;
+        }
     </style>
 </head>
+
 <body>
     <h2>Live Vehicle Positions</h2>
 
@@ -89,7 +116,10 @@
                     option.textContent = `Route ${route}`;
                     routeFilter.appendChild(option);
                 });
-
+                // Set the default route to 20 if it exists
+                if (routes.has("20")) {
+                    routeFilter.value = "20";
+                }
                 // Display vehicles initially
                 updateMapAndTable();
             })
@@ -131,4 +161,5 @@
         routeFilter.addEventListener('change', updateMapAndTable);
     </script>
 </body>
+
 </html>
