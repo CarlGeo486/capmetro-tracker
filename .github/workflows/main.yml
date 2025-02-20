@@ -1,0 +1,36 @@
+name: Update Vehicle Positions JSON
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'  # Runs every 5 minutes
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  update-json:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download latest JSON file
+        run: curl -sSL "https://data.texas.gov/download/cuc7-ywmd/text%2Fplain" -o vehiclepositions.json
+
+      - name: Check for changes
+        run: |
+          if git diff --quiet vehiclepositions.json; then
+            echo "No changes in JSON file. Exiting."
+            exit 0
+          else
+            echo "JSON file has changed."
+          fi
+
+      - name: Commit and push if updated
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add vehiclepositions.json
+          git commit -m "Update vehiclepositions.json [Automated]"
+          git push
