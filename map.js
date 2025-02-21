@@ -12,7 +12,7 @@ let allBusRoutes = {}; // Store all bus routes
 let routeFilter = document.getElementById('routeFilter');
 
 // Fetch vehicle positions
-fetch('vehiclepositions.json')
+fetch('https://storage.googleapis.com/capmetro-tracker-updated/vehiclepositions.json')
     .then(response => response.json())
     .then(data => {
         let tableBody = document.getElementById('vehicleTable');
