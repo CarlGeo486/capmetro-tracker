@@ -99,7 +99,7 @@ function updateMapAndTable() {
         busRoutesLayer = L.geoJSON(allBusRoutes[selectedRoute], {
             style: function (feature) {
                 return {
-                    color: "#" + (feature.properties.ROUTECOLOR || "000000"),
+                    color: "#00008B", // Dark blue color
                     weight: 3,
                     opacity: 0.7
                 };
