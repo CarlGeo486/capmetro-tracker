@@ -10,43 +10,53 @@ let allVehicles = []; // Store all vehicle data
 let busRoutesLayer = null; // Store displayed bus routes
 let allBusRoutes = {}; // Store all bus routes
 let routeFilter = document.getElementById('routeFilter');
+let routes = new Set(); // Store unique routes
+let isDropdownInitialized = false; // Flag to ensure dropdown is populated once
 
-// Fetch vehicle positions
-fetch('https://storage.googleapis.com/capmetro-tracker-updated/vehiclepositions.json')
-    .then(response => response.json())
-    .then(data => {
-        let tableBody = document.getElementById('vehicleTable');
-        let routes = new Set();
+// Function to fetch vehicle positions and update the map
+function fetchDataAndUpdate() {
+    fetch('vehiclepositions.json')
+        .then(response => response.json())
+        .then(data => {
+            let tableBody = document.getElementById('vehicleTable');
 
-        allVehicles = data.entity.map(v => {
-            let lat = v.vehicle.position.latitude;
-            let lon = v.vehicle.position.longitude;
-            let label = v.vehicle.vehicle.label;
-            let speed = v.vehicle.position.speed || 0;
-            let timestamp = new Date(v.vehicle.timestamp * 1000).toLocaleString();
-            let route = v.vehicle.trip ? v.vehicle.trip.routeId : 'N/A';
+            // Update the allVehicles array with the latest data
+            allVehicles = data.entity.map(v => {
+                let lat = v.vehicle.position.latitude;
+                let lon = v.vehicle.position.longitude;
+                let label = v.vehicle.vehicle.label;
+                let speed = v.vehicle.position.speed || 0;
+                let timestamp = new Date(v.vehicle.timestamp * 1000).toLocaleString();
+                let route = v.vehicle.trip ? v.vehicle.trip.routeId : 'N/A';
 
-            routes.add(route);
-            return { lat, lon, label, speed, timestamp, route, id: v.vehicle.vehicle.id };
-        });
+                // Add the route to the Set (if not already present)
+                routes.add(route);
+                return { lat, lon, label, speed, timestamp, route, id: v.vehicle.vehicle.id };
+            });
 
-        // Populate the route filter dropdown
-        routes.forEach(route => {
-            let option = document.createElement('option');
-            option.value = route;
-            option.textContent = `Route ${route}`;
-            routeFilter.appendChild(option);
-        });
+            // Populate the dropdown ONLY ONCE using vehicle data
+            if (!isDropdownInitialized) {
+                routes.forEach(route => {
+                    let option = document.createElement('option');
+                    option.value = route;
+                    option.textContent = `Route ${route}`;
+                    routeFilter.appendChild(option);
+                });
 
-        if (routes.has("20")) {
-            routeFilter.value = "20";
-        }
+                // Set the default filter to Route 20 if it exists
+                if (routes.has("20")) {
+                    routeFilter.value = "20";
+                }
 
-        updateMapAndTable();
-    })
-    .catch(error => console.error('Error loading vehicle data:', error));
+                isDropdownInitialized = true; // Prevent re-initialization
+            }
 
-// Fetch bus routes from GeoJSON
+            // Update the map and table
+            updateMapAndTable();
+        })
+        .catch(error => console.error('Error loading vehicle data:', error));
+}
+
 fetch('busroutes.geojson')
     .then(response => response.json())
     .then(data => {
@@ -55,10 +65,10 @@ fetch('busroutes.geojson')
             allBusRoutes[routeId] = feature; // Store by route ID
         });
 
-        updateMapAndTable();
+        // Pre-render routes immediately after GeoJSON loads
+        updateMapAndTable(); // Add this line
     })
     .catch(error => console.error('Error loading bus routes:', error));
-
 // Function to update both vehicles and routes
 function updateMapAndTable() {
     let selectedRoute = routeFilter.value;
@@ -99,7 +109,7 @@ function updateMapAndTable() {
         busRoutesLayer = L.geoJSON(allBusRoutes[selectedRoute], {
             style: function (feature) {
                 return {
-                    color: "#00008B", // Dark blue color
+                    color: "#" + (feature.properties.ROUTECOLOR || "000000"),
                     weight: 3,
                     opacity: 0.7
                 };
@@ -113,3 +123,9 @@ function updateMapAndTable() {
 
 // Event listener for dropdown change
 routeFilter.addEventListener('change', updateMapAndTable);
+
+// Initial fetch and update
+fetchDataAndUpdate();
+
+// Fetch data and update the map every 5 seconds
+setInterval(fetchDataAndUpdate, 5000);
