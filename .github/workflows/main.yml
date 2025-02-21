@@ -2,7 +2,7 @@ name: Update Vehicle Positions JSON
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # Runs every 5 minutes
+    - cron: '0 12 * * *'  # Runs every day at noon
   workflow_dispatch:  # Allows manual triggering
 
 jobs:
