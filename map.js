@@ -37,7 +37,10 @@ function fetchDataAndUpdate() {
 
             // Populate the dropdown ONLY ONCE using vehicle data
             if (!isDropdownInitialized) {
-                routes.forEach(route => {
+                // Convert Set to array and sort numerically
+                const sortedRoutes = Array.from(routes).sort((a, b) => a - b);
+
+                sortedRoutes.forEach(route => {
                     let option = document.createElement('option');
                     option.value = route;
                     option.textContent = `Route ${route}`;
