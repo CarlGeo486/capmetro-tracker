@@ -15,7 +15,8 @@ let isDropdownInitialized = false; // Flag to ensure dropdown is populated once
 
 // Function to fetch vehicle positions and update the map
 function fetchDataAndUpdate() {
-    fetch('vehiclepositions.json')
+    const timestamp = Date.now();
+    fetch('https://storage.googleapis.com/capmetro-tracker-updated/vehiclepositions.json?t=${timestamp}') // <-- Cache-busting parameter
         .then(response => response.json())
         .then(data => {
             let tableBody = document.getElementById('vehicleTable');
