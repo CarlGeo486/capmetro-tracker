@@ -84,16 +84,13 @@ function updateMapAndTable() {
     allVehicles.forEach(v => {
         if (selectedRoute === "all" || v.route === selectedRoute) {
             let marker = L.marker([v.lat, v.lon]).addTo(map)
-                .bindPopup(`<b>Vehicle: ${v.label}</b><br>Route: ${v.route}<br>Speed: ${v.speed.toFixed(2)} m/s`);
+                .bindPopup(`<b>Vehicle: ${v.label}</b><br>Route: ${v.route}<br>Speed: ${(v.speed * 2.23694).toFixed(1)} mph`);
             markers.push(marker);
 
             let row = `<tr>
                 <td>${v.id}</td>
-                <td>${v.label}</td>
                 <td>${v.route}</td>
-                <td>${v.lat}</td>
-                <td>${v.lon}</td>
-                <td>${v.speed.toFixed(2)}</td>
+                <td>${(v.speed * 2.23694).toFixed(1)}</td>
                 <td>${v.timestamp}</td>
             </tr>`;
             tableBody.innerHTML += row;
